@@ -1,0 +1,95 @@
+1. 4问: 1）Google Doc single server有什么问题；2) eDocument sign 3) 半夜集中收集metrics 4) 有点记不清了关于SQL/NoSQL
+
+
+1. google doc: 好多个server, 每个document只能在一个server上面, 问round-robin的load balance有什么问题。
+2. 面经的那个关于eventual consistency和strong consistency的问题，并说明为什么。
+3. database里面又所有signed document的数据，然后每个server有log记录所有发出notification的document, 问怎么知道哪些document没有send notification. 需要一个scalable的solution.
+
+
+先是花了2，3分钟介绍规则，然后给60秒介绍自己，接下来20分钟要回答以下的3个technical questions。
+1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
+答：round ronbin 两个缺点，第一默认所有server的处理能力相当。如果有的server比较强悍，有的server比较弱鸡，会造成资源浪费。
+2.round ronbin不考虑number of connection request a server received。比如一个server上的doc有很多人同时访问，那么有新的doc进来的时候最好就不要再发到这个server上，改进方法Least Connection load balancing。
+
+2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.  
+第一个是media stream的meta data （eventual）
+第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 （我答的eventual，不知道对不对）
+第三个是银行的deposit和withdraw （strong）
+
+3. 还是doc， 如果所有的user sign了doc 就给每个user 发一个notification。但是由于系统的问题只有50%的doc 成功的给所有人发松了notifiction，问如果给那些没有成功发送notification的doc重新发送notification该怎么做。
+现有的条件是 1）database 里存着所有的doc id以及这个doc是否被所有user sign了。2） 有500个server，每个server会存有从该server成功发送notification的doc id
+
+答：1）db里加一列表示是否成功发送过notification 2）500个server各自统计发送成功的doc id，然后对db分别做batch write 3）系统对db做batch get 拿到所有没有发送成功的docId，然后重新发送notification。
+
+
+1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。load balancer是round ronbin，问这个设计有什么问题。我说round robin和没有replica会有问题，老黑就继续追问了该用什么替代round robin和怎么replica。
+
+
+
+
+2. 判该下哪种用strong consistency 哪种用 eventual consistency.  
+第一个是media stream的meta data
+第二个是web 做user analysis
+第三个是银行的deposit和withdraw
+eventual，eventual，strong
+
+3.给 signed doc 发notification 问题。 要给所有signed doc的user 发一个notification。但是只有50%的doc 成功的给所有人发松了notifiction，问如果给那些没有成功发送notification的doc重新发送notification该怎么做。
+我答先从server把所有发过的notice汇总到datab‍‍‍‍‍‍‍‍‌‍‌‌‍‌‌‌‌‌ase server上，然后和database比较 找出没发的，再分配给其他server发。 不知道有没有更好的方法。
+
+三道系统设计，Google doc， eventual consistency和strong consistency, send no‍‍‍‍‍‍‍‍‌‍‌‌‍‌‌‌‌‌tification
+
+在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。
+全世界一万台自动售货机每天同一固定时间给一个server发状态，问这种设计有哪些问题。
+要开发一个手机上的围棋游戏，现在要做一个feature是通过分析当前棋局给玩家提供下一步的建议，这个feature可以通过1）在手机端直接跑算法 2）把棋局发到server端，server端跑算法然后把结果返回给手机，问这两种approach各有什么优劣。
+
+
+
+
+
+先是花了2，3分钟介绍规则，然后给60秒介绍自己，接下来20分钟要回答以下的3个technical questions。
+1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
+答：round ronbin 两个缺点，第一默认所有server的处理能力相当。如果有的server比较强悍，有的server比较弱鸡，会造成资源浪费。
+2.round ronbin不考虑number of connection request a server received。比如一个server上的doc有很多人同时访问，那么有新的doc进来的时候最好就不要再发到这个server上，改进方法Least Connection load balancing。
+
+2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.  
+第一个是media stream的meta data （eventual）
+第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 （我答的eventual，不知道对不对）
+第三个是银行的deposit和withdraw （strong）
+
+3. 还是doc， 如果所有的user sign了doc 就给每个user 发一个notification。但是由于系统的问题只有50%的doc 成功的给所有人发松了notifiction，问如果给那些没有成功发送notification的doc重新发送notification该怎么做。
+现有的条件是 1）database 里存着所有的doc id以及这个doc是否被所有user sign了。2） 有500个server，每个server会存有从该server成功发送notification的doc id
+1. Google doc load banlencer,
+
+2. 判断3个情况，分别该用strong consistency 还是 eventual consistency.  
+
+     只有bank交易的那个需要gurantee strong consistency
+3. 类似Docu-sign system， sign完document会send notification to users，但是发现系统最近有50%的概率 虽然sign了document，但没有send notification
+
+    所有sign了的document id 会save 到一个database，
+
+    所有发出去了的email 和document信息 会存到一个log file，
+找出所有需要重新send notification的文件
+
+
+要求设计一个cron job scheduling system并且支持
+- create job
+- schedule job
+- report success, failure or stale
+- highly reliable
+- check log of job run
+
+要求的scale相对不大，基本上单机都能搞定。主要讨论了下scheduler功能的实现
+
+
+设计一个cron job scheduler, ~10k average jobs at any moment
+如果job 没法在时限内做完 必须给通知
+
+重点：
+
+怎麽schedule cron task, 要2 tables, 需要有dispatch servi‍‍‍‍‍‍‍‍‌‍‌‌‍‌‌‌‌‌ce, job queue, worker node, alerting service
+
+
+
+在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。
+全世界一万台自动售货机每天同一固定时间给一个server发状态，问这种设计有哪些问题。
+要开发一个手机上的围棋游戏，现在要做一个feature是通过分析当前棋局给玩家提供下一步的建议，这个feature可以通过1）在手机端直接跑算法 2）把棋局发到server端，server端跑算法然后把结果返回给手机，问这两种approach各有什么优劣。
