@@ -1,0 +1,35 @@
+翻译一下就是：
+①一致性：对于客户端的每次读操作，要么读到的是最新的数据，要么读取失败。换句话说，一致性是站在分布式系统的角度，对访问本系统的客户端的一种承诺：要么我给您返回一个错误，要么我给你返回绝对一致的最新数据，不难看出，其强调的是数据正确。
+
+②可用性：任何客户端的请求都能得到响应数据，不会出现响应错误。换句话说，可用性是站在分布式系统的角度，对访问本系统的客户的另一种承诺：我一定会给您返回数据，不会给你返回错误，但不保证数据最新，强调的是不出错。
+
+③分区容忍性：由于分布式系统通过网络进行通信，网络是不可靠的。当任意数量的消息丢失或延迟到达时，系统仍会继续提供服务，不会挂掉。换句话说，分区容忍性是站在分布式系统的角度，对访问本系统的客户端的再一种承诺：我会一直运行，不管我的内部出现何种数据同步问题，强调的是不挂掉。
+
+对于一个分布式系统而言，P是前提，必须保证，因为只要有网络交互就一定会有延迟和数据丢失，这种状况我们必须接受，必须保证系统不能挂掉。所以只剩下C、A可以选择。要么保证数据一致性（保证数据绝对正确），要么保证可用性（保证系统不出错）。
+
+当选择了C（一致性）时，如果由于网络分区而无法保证特定信息是最新的，则系统将返回错误或超时。
+
+当选择了A（可用性）时，系统将始终处理客户端的查询并尝试返回最新的可用的信息版本，即使由于网络分区而无法保证其是最新的。
+
+Data replication 的时候，如果采用的是一致哈希，那么不要把他们都分配在一个区域的服务器的虚拟节点上。因为这个区域如果因为停电，洪水，会导致这些replication 都没法用。
+一致哈希的时候，可以用Quorum consensus保证读和写的时候的一致性。
+
+1.Strong consistency: any read operation returns a value corresponding to the result of the most updated write data item. A client never sees out-of-date data.
+2.Weak consistency: subsequent read operations may not see the most updated value.
+3.Eventual consistency: this is a specific form of weak consistency. Given enough time, all updates are propagated, and all replicas are consistent.
+
+Vector Clock is an algorithm that generates partial ordering of events and detects causality violations in a distributed system. It uses to resolve the conflict when distributed system handle the data consistensy issue.
+缺点是，1.增加复杂度，2，vector 的pair 会迅速增长，如果需要监控的点比较多的话。解决办法是在分布式的主干上，加vector，这样vector 的数量可以控制。另外到了一段时间自动删掉之前的vector.
+
+Failure detection。例如gossip protocol： 【member IDs and heartbeat】。每次随机给一个set 的所有的node，发手头上有的，包括自己和其他node 的最近时间戳。
+
+Temporary failure: temporary
+A technique called “sloppy quorum” [4] is used to improve availability.If a server is unavailable due to network or server failures, another server will process
+requests temporarily. When the down server is up, changes will be pushed back to achieve data consistency. This process is called hinted handoff.
+
+Permanent Failure
+A Merkle tree is used for inconsistency detection and minimizing the amount of data transferred. 首先把一堆node 分成buckets，每个buckets 作为leaf。从leaf 开始计算每个bucket 的hash 值。然后两和bucket 作为子节点，继续计算哈希值，直到全局只剩下一个节点。这个节点就是root 节点。通过比较两棵tree，如果root 哈希值不一样，就比左右子树的。这样能快速定位到不一样的node。
+
+处理数据中心outage：to replicate data across multiple data centers.
+
+Bloom Filters 用来快速找到哪一个ssTable包含key
