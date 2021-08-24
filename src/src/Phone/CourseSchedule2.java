@@ -82,6 +82,7 @@ n: number of pairs in the input
 
 */
 
+    // 有环不要紧，indegree 保证每个边只会被访问一次
     public List<String> findMiddleCourse(String[][] pairs) {
         Map<String, List<String>> graph = new HashMap<>();
         Map<String, Integer> indegree = new HashMap<>();
@@ -97,12 +98,32 @@ n: number of pairs in the input
         }
 
         List<String> res = new ArrayList<>();
-        dfs(graph, indegree, new ArrayList<>(), res);
+        for (String s : indegree.keySet()) {
+            if (indegree.get(s) == 0) {
+                List<String> temp = new ArrayList<>(Arrays.asList(s));
+                dfs(graph, indegree, temp , res, s);
+            }
+        }
         return res;
     }
 
-    void dfs(Map<String, List<String>> graph,  Map<String, Integer> indegree, List<String> cur, List<String> res) {
-        if ()
+    void dfs(Map<String, List<String>> graph,  Map<String, Integer> indegree, List<String> temp, List<String> res, String cur) {
+        if (!graph.containsKey(cur)) {
+            String middle = temp.get((temp.size() - 1) / 2);
+            if (!res.contains(middle)) {
+                res.add(middle);
+            }
+            return;
+        }
+
+        for (String neighbor : graph.get(cur)) {
+            temp.add(neighbor);
+            indegree.put(neighbor, indegree.get(neighbor) - 1);
+            dfs (graph, indegree, temp, res, neighbor);
+            temp.remove(temp.size() - 1);
+            indegree.put(neighbor,indegree.get(neighbor) + 1);
+        }
+
     }
 
 

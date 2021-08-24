@@ -21,8 +21,38 @@ public class Main {
 //            {"Curtis",   "1330", "exit"},
 // };
 //        System.out.println(getLargestGroup(test));
-        testCourseSchedule();
+        testCourseSchedule2();
     }
+    private static void testCourseSchedule2() {
+//        String[][] s = {
+//    {"Logic", "COBOL"},
+//    {"Data Structures", "Algorithms"},
+//    {"Creative Writing", "Data Structures"},
+//    {"Algorithms", "COBOL"},
+//    {"Intro to Computer Science", "Data Structures"},
+//    {"Logic", "Compilers"},
+//    {"Data Structures", "Logic"},
+//    {"Graphics", "Networking"},
+//    {"Networking", "Algorithms"},
+//    {"Creative Writing", "System Administration"},
+//    {"Databases", "System Administration"},
+//    {"Creative Writing", "Databases"},
+//    {"Intro to Computer Science", "Graphics"},
+//};
+        String[][] s = {
+    {"Course_3", "Course_7"},
+    {"Course_0", "Course_1"},
+    {"Course_1", "Course_2"},
+    {"Course_2", "Course_3"},
+    {"Course_3", "Course_4"},
+    {"Course_4", "Course_5"},
+    {"Course_5", "Course_6"},
+};
+        CourseSchedule2 courseSchedule2 = new CourseSchedule2();
+        System.out.println( courseSchedule2.findMiddleCourse(s));
+    }
+
+
 
     private static void testCourseSchedule() {
         CourseSchedule courseSchedule = new CourseSchedule();
