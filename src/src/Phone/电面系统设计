@@ -174,6 +174,15 @@ online e-signature document, multiple people need to sign one document. when all
 
 有没有其他的方法。
 
+1.5 已经有“负载均衡配置”，问当用户量访问上升，performance会受到什么影响？
+答： 增长的用户会带的问题主要是 hashing collision，负载增加，
+解决方案可以使增加 instance OR improve load balanceing algorihtm followup，
+对于新增的instances，不改变之前已经在处理的process的ID，新增的process 均衡地allocate到不同instances上（新增的和旧的instances）
+
+（注意是usage，我看到有的老的帖子说成了user grow）system会变慢，因为doc会增加user会增加，机器的network，
+cpu各种都负载会增加所以就会变慢。我就说如果我们解决这种情况就要加机器，但是现在的hashing function加机器很难，
+加机器的话基本上mapping都break了，所以要更好地scale，我们要用consistent hashing。
+
 
 2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.
 答：
