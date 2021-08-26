@@ -1,15 +1,20 @@
 package Phone;
 
+import java.text.DecimalFormat;
+import java.util.*;
+
 public class UnsortedLogFile {
     /*
     *
+    *
+    * https://leetcode.com/discuss/interview-question/1144222/Karat-Interview-for-Robinhood-SWE
+    * https://leetcode.com/playground/UpvU9DZe 某人的答案
 Anonymous User
 Anonymous User
 Last Edit: April 5, 2021 8:32 PM
 
 2.5K VIEWS
 
-First part was previously asked, but I didnt get much time to get into the the follow up question. Suggestions/approach?
 
 Suppose we have an unsorted log file of accesses to web resources. Each log entry consists of an access time, the ID of the user making the access, and the resource ID.
 The access time is represented as seconds since 00:00:00, and all times are assumed to be in the same day.
@@ -87,4 +92,86 @@ transition_graph(logs2) # =>
 }
     *
     * */
+
+    public List<String> highestNumberOfAccess(String[][] data) {
+        // 滑动窗口。
+        Arrays.sort(data, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
+        Map<String, Integer> count = new HashMap<>();
+        int max = 0, j = 0;
+        String value = "";
+        for (int i = 0; i < data.length; i++) {
+            count.put(data[i][2], count.getOrDefault(data[i][2], 0) + 1);
+            while (Integer.parseInt(data[i][0]) - Integer.parseInt(data[j][0]) > 5 * 60) {
+                String resource = data[j++][2];
+                count.put(resource, count.get(resource) - 1);
+                if (count.get(resource) == 0) {
+                    count.remove(resource);
+                }
+            }
+            // 这里能不能加速？？
+            for (String key : count.keySet()) {
+                if (count.get(key) > max) {
+                    max= count.get(key);
+                    value = key;
+                }
+            }
+        }
+
+        return Arrays.asList(value, max + "");
+    }
+
+
+    public Map<String, List<String[]>> getAdjListWithProbability(String[][] data) {
+        Map<String, List<String[]>> map = new HashMap<>(); // <user, <resource, time>>
+        Map<String, List<String[]>> res = new HashMap<>();
+        // 按照user 统计其resource 和time
+        for (String[] d : data) {
+            map.putIfAbsent(d[1], new ArrayList<>());
+            map.get(d[1]).add(new String[]{d[2], d[0]});
+        }
+        // 对resource 和time pairs 按照time 排序
+        for (List<String[]> v : map.values()) {
+            Collections.sort(v, (a, b) -> Integer.compare(Integer.parseInt(a[1]), Integer.parseInt(b[1])));
+        }
+
+        // 找到每个节点的下一个节点。
+        // 这里为了方便，把start 也看作一个节点。
+        // 对于list 的末尾节点，它的下一个节点是end
+        Map<String, List<String>> nextNode = new HashMap<>();
+        nextNode.put("START", new ArrayList<>());
+
+        for (List<String[]> v : map.values()) {
+            for (int i = 1; i < v.size(); i++) {
+                nextNode.putIfAbsent(v.get(i - 1)[0], new ArrayList<>());
+                nextNode.get(v.get(i - 1)[0]).add(v.get(i)[0]);
+            }
+            nextNode.putIfAbsent(v.get(v.size() - 1)[0], new ArrayList<>());
+            nextNode.get(v.get(v.size() - 1)[0]).add("END");
+            nextNode.get("START").add(v.get(0)[0]);
+        }
+
+        for (String node : nextNode.keySet()) {
+            res.put(node, calculateProbability(nextNode.get(node)));
+        }
+        return res;
+    }
+
+    private List<String[]>  calculateProbability(List<String> temp) {
+        Map<String, Integer> map = new HashMap<>();
+        for (String t : temp) {
+            map.put(t, map.getOrDefault(t, 0) + 1);
+        }
+        List<String[]> res = new ArrayList<>();
+        for (String t : map.keySet()) {
+            res.add(new String[]{t, percentage(map.get(t), temp.size())});
+        }
+        return res;
+    }
+
+    private String percentage(int numerator, int denominator) {
+        double percentage = (double)numerator / (double) denominator;
+        DecimalFormat decimalFormat = new DecimalFormat("0.000");
+        return decimalFormat.format(percentage);
+    }
+
 }

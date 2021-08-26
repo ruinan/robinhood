@@ -57,6 +57,7 @@ eg.
     *
     * */
     // 假设所有的time 都在一天，也就是从["0000", "2359"]
+    // https://leetcode.com/playground/4XbjenvM 某人的答案
 
     public List<String> threeTimesOneHour (String[][] input) {
         // 我这里是返回所有的满足一小时之内刷了三次的人的名字。

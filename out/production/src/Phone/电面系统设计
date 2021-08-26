@@ -65,8 +65,7 @@ eventual，eventual，strong
 1. Google doc load banlencer,
 
 2. 判断3个情况，分别该用strong consistency 还是 eventual consistency.  
-
-     只有bank交易的那个需要gurantee strong consistency
+只有bank交易的那个需要gurantee strong consistency
 3. 类似Docu-sign system， sign完document会send notification to users，但是发现系统最近有50%的概率 虽然sign了document，但没有send notification
 
     所有sign了的document id 会save 到一个database，
@@ -155,8 +154,5 @@ strong consistency or eventual consistency a, web site like youtube answer: even
 online e-signature document, multiple people need to sign one document. when all have signed, send email to everyone for notification. they found bug that they missed 50% email notifications. they have logs for who signs the doc and sending email. The user space and usage is very huge. how to find out all those missing email notification. Answer: streaming process. send those logs to kafak and use spark to parse and compare of number of signature and email notification by the same document id.
 
 
-
-
-************************************************************************* 相关知识 ***************************************************************
 
 

@@ -126,6 +126,4 @@ n: number of pairs in the input
 
     }
 
-
-
 }
