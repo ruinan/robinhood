@@ -92,7 +92,7 @@ transition_graph(logs2) # =>
 }
     *
     * */
-
+    // Q1
     public List<String> highestNumberOfAccess(String[][] data) {
         // 滑动窗口。
         Arrays.sort(data, (a, b) -> Integer.compare(Integer.parseInt(a[0]), Integer.parseInt(b[0])));
@@ -120,7 +120,7 @@ transition_graph(logs2) # =>
         return Arrays.asList(value, max + "");
     }
 
-
+    // Q2
     public Map<String, List<String[]>> getAdjListWithProbability(String[][] data) {
         Map<String, List<String[]>> map = new HashMap<>(); // <user, <resource, time>>
         Map<String, List<String[]>> res = new HashMap<>();
