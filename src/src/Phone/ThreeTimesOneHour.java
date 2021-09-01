@@ -64,14 +64,15 @@ eg.
         // 这个题的输出是没有按照输入顺序排列的。
         // 思考了一下，绝对不能按照string 排序。
         // 需要把时间转换为相对于00：00 的分钟
-        Map<String, PriorityQueue<String>> map = new HashMap<>(); // <name, list<time>>
+        Map<String, List<String>> map = new HashMap<>(); // <name, list<time>>
         // 上来就是排序，用PQ，对每个人排
         for (String[] s : input) {
-            map.putIfAbsent(s[0], new PriorityQueue<>((a, b) -> convertTime(a).compareTo(convertTime(b))));
+            map.putIfAbsent(s[0], new ArrayList<>());
             map.get(s[0]).add(s[1]);
         }
         List<String> res = new ArrayList<>();
         for (String name : map.keySet()) {
+            Collections.sort(map.get(name), (a, b) -> convertTime(a).compareTo(convertTime(b)));
             List<String> time = checkTime(map.get(name));
             if (time != null) {
                 res.add(name);
@@ -82,11 +83,10 @@ eg.
         return res;
     }
 
-    private List<String> checkTime(PriorityQueue<String> pq) {
-        if (pq.size() < 3) {
+    private List<String> checkTime(List<String> temp) {
+        if (temp.size() < 3) {
             return null;
         }
-        List<String> temp = new ArrayList<>(pq);
         // 这里题目要求输出一个结果就行，那么找到这么一个3个的tuple，立即返回就行
         for (int i = 1; i < temp.size() - 1; i++) {
             if (convertTime(temp.get(i + 1)) - convertTime(temp.get(i - 1)) <= 60) {

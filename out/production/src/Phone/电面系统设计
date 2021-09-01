@@ -1,4 +1,4 @@
-1. 4问: 1）Google Doc single server有什么问题；2) eDocument sign 3) 半夜集中收集metrics 4) 有点记不清了关于SQL/NoSQL
+1. 4问: 1）Google Doc single server有什么问题；2) eDocument sign 3) 半夜集中收集metrics 4) 有点记不清了关于SQL/NoSQL 的优缺点， 区别
 
 
 1. google doc: 好多个server, 每个document只能在一个server上面, 问round-robin的load balance有什么问题。
@@ -48,14 +48,12 @@ eventual，eventual，strong
 
 
 
-
-
 先是花了2，3分钟介绍规则，然后给60秒介绍自己，接下来20分钟要回答以下的3个technical questions。
 1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
 答：round ronbin 两个缺点，第一默认所有server的处理能力相当。如果有的server比较强悍，有的server比较弱鸡，会造成资源浪费。
 2.round ronbin不考虑number of connection request a server received。比如一个server上的doc有很多人同时访问，那么有新的doc进来的时候最好就不要再发到这个server上，改进方法Least Connection load balancing。
 
-2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.  
+2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.
 第一个是media stream的meta data （eventual）
 第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 （我答的eventual，不知道对不对）
 第三个是银行的deposit和withdraw （strong）
@@ -64,13 +62,12 @@ eventual，eventual，strong
 现有的条件是 1）database 里存着所有的doc id以及这个doc是否被所有user sign了。2） 有500个server，每个server会存有从该server成功发送notification的doc id
 1. Google doc load banlencer,
 
-2. 判断3个情况，分别该用strong consistency 还是 eventual consistency.  
+2. 判断3个情况，分别该用strong consistency 还是 eventual consistency.
 只有bank交易的那个需要gurantee strong consistency
 3. 类似Docu-sign system， sign完document会send notification to users，但是发现系统最近有50%的概率 虽然sign了document，但没有send notification
+所有sign了的document id 会save 到一个database，
 
-    所有sign了的document id 会save 到一个database，
-
-    所有发出去了的email 和document信息 会存到一个log file，
+所有发出去了的email 和document信息 会存到一个log file，
 找出所有需要重新send notification的文件
 
 
@@ -95,22 +92,13 @@ Job Scheduler
 
 重点：
 
-怎麽schedule cron task, 要2 tables, 需要有dispatch servi‍‍‍‍‍‍‍‍‌‍‌‌‍‌‌‌‌‌ce, job queue, worker node, alerting service
+怎麽schedule cron task, 要2 tables, 需要有dispatch service, job queue, worker node, alerting service
 ob-Scheduler 的系统设计。 https://leetcode.com/discuss/general-discussion/1082786/System-Design%3A-Designing-a-distributed-Job-Scheduler-or-Many-interesting-concepts-to-learn
 
 
 在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。
 全世界一万台自动售货机每天同一固定时间给一个server发状态，问这种设计有哪些问题。
 要开发一个手机上的围棋游戏，现在要做一个feature是通过分析当前棋局给玩家提供下一步的建议，这个feature可以通过1）在手机端直接跑算法 2）把棋局发到server端，server端跑算法然后把结果返回给手机，问这两种approach各有什么优劣。
-
-
-
-
-
-
-
-
-
 
 
 在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。Threadpool; process; tracing for the CPU usage, and print special logs.
@@ -155,4 +143,66 @@ online e-signature document, multiple people need to sign one document. when all
 
 
 
+************************************************************************* 解答 ***************************************************************
+1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。
+也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
+
+答：算法的优点：
+算法的优点是其简洁性，它无需记录当前所有连接的状态，所以它是一种无状态调度。
+
+算法的缺点：
+轮询调度算法假设所有服务器的处理性能都相同，不关心每台服务器的当前连接数和响应速度。当请求服务间隔时间变化比较大时，轮询调度算法容易导致服务器间的负载不平衡。
+
+总结
+所以此种均衡算法适合于服务器组中的所有服务器都有相同的软硬件配置并且平均服务请求相对均衡的情况。
+
+可以用consistent hashing 解决。https://blog.csdn.net/cywosp/article/details/23397179
+
+有没有其他的方法。
+
+1.5 已经有“负载均衡配置”，问当用户量访问上升，performance会受到什么影响？
+答： 增长的用户会带的问题主要是 hashing collision，负载增加，
+解决方案可以使增加 instance OR improve load balanceing algorihtm followup，
+对于新增的instances，不改变之前已经在处理的process的ID，新增的process 均衡地allocate到不同instances上（新增的和旧的instances）
+
+（注意是usage，我看到有的老的帖子说成了user grow）system会变慢，因为doc会增加user会增加，机器的network，
+cpu各种都负载会增加所以就会变慢。我就说如果我们解决这种情况就要加机器，但是现在的hashing function加机器很难，
+加机器的话基本上mapping都break了，所以要更好地scale，我们要用consistent hashing。
+
+
+2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.
+答：
+第一个是media stream的meta data （eventual）。 等一段时间看也无所谓，所以eventual。
+第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 （我答的eventual，不知道对不对）
+第三个是银行的deposit和withdraw （strong consistency) 银行需要高consistency。钱数字不能错。
+
+3. 类似Docu-sign system， sign完document会send notification to users，但是发现系统最近有50%的概率 虽然sign了document，但没有send notification。
+还是doc， 如果所有的user sign了doc 就给每个user 发一个notification。但是由于系统的问题只有50%的doc 成功的给所有人发松了notifiction，
+问如果给那些没有成功发送notification的doc重新发送notification该怎么做。
+现有的条件是 1）database 里存着所有的doc id以及这个doc是否被所有user sign了。2） 有500个server，每个server会存有从该server成功发送notification的doc id
+需要一个scalable的solution.
+
+答： 所有sign了的document id 会save 到一个database，所有发出去了的email 和document信息 会存到一个log file，找出所有需要重新send notification的文件。
+    1）db里加一列表示是否成功发送过notification 
+    2）500个server各自统计发送成功的doc id，然后对db分别做batch write 
+    3）系统对db做batch get 拿到所有没有发送成功的docId，然后重新发送notification。
+
+
+4. 在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。
+答： Video 体积太大。硬件性能不足。程序效率太低。看log，监控系统性能，网络性能。
+
+
+5. 全世界一万台自动售货机每天同一固定时间给一个server发状态，问这种设计有哪些问题。
+答： server 压力太大。容易造成single point of failure. 因为只有一台服务器接受request。解决方法，分时间段发送。如果不行，多搞几个server。
+
+
+6. 要开发一个手机上的围棋游戏，现在要做一个feature是通过分析当前棋局给玩家提供下一步的建议，这个feature可以通过1）在手机端直接跑算法 
+2）把棋局发到server端，server端跑算法然后把结果返回给手机，问这两种approach各有什么优劣。
+
+答： 1. 的优点是，不需要联网；availability 高，low latency; 
+        的缺点是，手机性能有限，不能支持太复杂的对战算法。
+        
+     2. 的优点是，支持高性能算法；可以tracking 用户行；可以学习用户下棋技巧；系统安全性高。可以轻松升级。
+        缺点是， 需要联网； latency 高；系统复杂度高。
+        
 
