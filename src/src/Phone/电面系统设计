@@ -147,11 +147,22 @@ online e-signature document, multiple people need to sign one document. when all
 1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。
 也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
 
+访问同一个doc的所有request都会发到同一个server:
+问题是，如果当前server 挂了，所有被当前server 处理的doc 都无法访问。
+解决方法是： 
+1. back-up server, 不改变当前系统架构的基础上，解决这个问题。
+2. 同一个doc 可以被不同server 处理，实现这个解决方法要consistent hashing. 代价是，每个server要存储doc 相关信息。不同servers 之间要sync。增加系统复杂性。
+
+
+
+
+处理分配doc的load balancer是round ronbin，问这个设计有什么问题
 答：算法的优点：
 算法的优点是其简洁性，它无需记录当前所有连接的状态，所以它是一种无状态调度。
 
 算法的缺点：
-轮询调度算法假设所有服务器的处理性能都相同，不关心每台服务器的当前连接数和响应速度。当请求服务间隔时间变化比较大时，轮询调度算法容易导致服务器间的负载不平衡。
+轮询调度算法假设所有服务器的处理性能都相同，不关心每台服务器的当前连接数和响应速度。当请求服务间隔时间变化比较大时，轮询调度算法容易导致服务器间的负载不平衡。也就是说单个服务器有可能因为轮巡，导致负载极速增加。
+
 
 总结
 所以此种均衡算法适合于服务器组中的所有服务器都有相同的软硬件配置并且平均服务请求相对均衡的情况。
