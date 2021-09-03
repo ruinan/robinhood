@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        testlargestGroup();
+        testCourseSchedule();
 
     }
 
@@ -166,8 +166,9 @@ public class Main {
                 // {"Course_3", "Course_4"},
                 {"Course_2", "Course_3"}
         };
-        System.out.println(courseSchedule.findMiddle(s));
-        System.out.println(courseSchedule.findMiddle(singleCourseList));
+//        System.out.println(courseSchedule.findMiddle(s));
+//        System.out.println(courseSchedule.findMiddle(singleCourseList));
+        System.out.println(courseSchedule.findMiddleBFS(s));
     }
 
 

@@ -147,11 +147,22 @@ online e-signature document, multiple people need to sign one document. when all
 1. Google doc, 可以允许多个人访问同一个doc。每个server可以处理很多不同的doc，但同一个doc只由一个固定的server处理。
 也就是说访问同一个doc的所有request都会发到同一个server 处理分配doc的load balancer是round ronbin，问这个设计有什么问题。
 
+访问同一个doc的所有request都会发到同一个server:
+问题是，如果当前server 挂了，所有被当前server 处理的doc 都无法访问。
+解决方法是： 
+1. back-up server, 不改变当前系统架构的基础上，解决这个问题。
+2. 同一个doc 可以被不同server 处理，实现这个解决方法要consistent hashing. 代价是，每个server要存储doc 相关信息。不同servers 之间要sync。增加系统复杂性。
+
+
+
+
+处理分配doc的load balancer是round ronbin，问这个设计有什么问题
 答：算法的优点：
 算法的优点是其简洁性，它无需记录当前所有连接的状态，所以它是一种无状态调度。
 
 算法的缺点：
-轮询调度算法假设所有服务器的处理性能都相同，不关心每台服务器的当前连接数和响应速度。当请求服务间隔时间变化比较大时，轮询调度算法容易导致服务器间的负载不平衡。
+轮询调度算法假设所有服务器的处理性能都相同，不关心每台服务器的当前连接数和响应速度。当请求服务间隔时间变化比较大时，轮询调度算法容易导致服务器间的负载不平衡。也就是说单个服务器有可能因为轮巡，导致负载极速增加。
+
 
 总结
 所以此种均衡算法适合于服务器组中的所有服务器都有相同的软硬件配置并且平均服务请求相对均衡的情况。
@@ -161,20 +172,22 @@ online e-signature document, multiple people need to sign one document. when all
 有没有其他的方法。
 
 1.5 已经有“负载均衡配置”，问当用户量访问上升，performance会受到什么影响？
-答： 增长的用户会带的问题主要是 hashing collision，负载增加，
-解决方案可以使增加 instance OR improve load balanceing algorihtm followup，
-对于新增的instances，不改变之前已经在处理的process的ID，新增的process 均衡地allocate到不同instances上（新增的和旧的instances）
+答： 增长的用户会带的问题主要负载增加，处理速度变慢，网络通信带宽有限，网速受影响。解决方法是horizontal 扩展。增加机器的方法，而不是提高分布式系统的单个机器的硬件性能。
 
-（注意是usage，我看到有的老的帖子说成了user grow）system会变慢，因为doc会增加user会增加，机器的network，
+注意是usage，我看到有的老的帖子说成了user grow）system会变慢，因为doc会增加user会增加，机器的network，
 cpu各种都负载会增加所以就会变慢。我就说如果我们解决这种情况就要加机器，但是现在的hashing function加机器很难，
 加机器的话基本上mapping都break了，所以要更好地scale，我们要用consistent hashing。
 
 
-2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency.
+2. 判该下面三种情况哪种用strong consistency 哪种用 eventual consistency. 还有一种是（weak consistency）
 答：
-第一个是media stream的meta data （eventual）。 等一段时间看也无所谓，所以eventual。
-第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 （我答的eventual，不知道对不对）
-第三个是银行的deposit和withdraw （strong consistency) 银行需要高consistency。钱数字不能错。
+第一个是media stream的meta data （eventual）。media 不需要所有client 在同一时间，都看到。这是一个read 操作，server 之间需要时间sync up。对于media 而言，晚一段时间看到不是什么问题。还能降低
+成本。
+
+第二个是web 做user analysis，面试官说可以想象成一个web，显示的是hit counter。 eventual consistency. 因为user analysis 对实时性要求不是那么高，所以，有些server 晚点更新最新数据，不影响结果。
+
+第三个是银行的deposit和withdraw （strong consistency) 银行需要 Strong consistency。因为deposit 和withdraw 都需要实时根据账户金额来确定有多少钱可以交易。
+如果不是strong consistency，会导致账户金额和实际拥有的金额不匹配。导致交易无法完成。
 
 3. 类似Docu-sign system， sign完document会send notification to users，但是发现系统最近有50%的概率 虽然sign了document，但没有send notification。
 还是doc， 如果所有的user sign了doc 就给每个user 发一个notification。但是由于系统的问题只有50%的doc 成功的给所有人发松了notifiction，
@@ -185,15 +198,24 @@ cpu各种都负载会增加所以就会变慢。我就说如果我们解决这�
 答： 所有sign了的document id 会save 到一个database，所有发出去了的email 和document信息 会存到一个log file，找出所有需要重新send notification的文件。
     1）db里加一列表示是否成功发送过notification 
     2）500个server各自统计发送成功的doc id，然后对db分别做batch write 
-    3）系统对db做batch get 拿到所有没有发送成功的docId，然后重新发送notification。
+    3）系统做一个worker，db做batch get 拿到所有没有发送成功的docId，然后重新发送notification。
 
 
 4. 在一个server上有一个process同时处理多个video，现在发现同时处理超过10个video就会出错，但不知道具体bug是什么。问在debug期间有哪些workaround。
 答： Video 体积太大。硬件性能不足。程序效率太低。看log，监控系统性能，网络性能。
+1. 先看server 的log，根据log的找到软件部分的问题
+2. 看监控系统（monitor）， 是不是cpu 性能瓶颈，网络无法连接，
+3. 减少video size，还是处理10个， 看看是不是因为video size 导致的
+4. 减少数量，一次处理5个，看看是不是同事处理数量导致的。
 
 
 5. 全世界一万台自动售货机每天同一固定时间给一个server发状态，问这种设计有哪些问题。
-答： server 压力太大。容易造成single point of failure. 因为只有一台服务器接受request。解决方法，分时间段发送。如果不行，多搞几个server。
+答： 有俩问题，1 只有一个server 接受request 2. 1万台售货机同一时间发。
+
+1. 只有一台server 处理所有的request。容易造成single point of failure. 发送失败
+2. 同一时间发，对服务器压力承受能力是个考验。网络负载（band width）也是。
+
+解决方法，分时间段发送。如果不行，多搞几个server。
 
 
 6. 要开发一个手机上的围棋游戏，现在要做一个feature是通过分析当前棋局给玩家提供下一步的建议，这个feature可以通过1）在手机端直接跑算法 

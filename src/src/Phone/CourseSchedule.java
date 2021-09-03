@@ -54,4 +54,37 @@ public class CourseSchedule {
         }
         return path.get((path.size() - 1) / 2);
     }
+
+    public String findMiddleBFS(String[][] pairs) {
+        Map<String, List<String>> graph = new HashMap<>();
+        Map<String, Integer> indegree = new HashMap<>();
+        for (String[] pair : pairs) {
+            for (String p : pair) {
+                indegree.put(p, 0);
+            }
+        }
+        for (String[] pair : pairs) {
+            graph.putIfAbsent(pair[0], new ArrayList());
+            graph.get(pair[0]).add(pair[1]);
+            indegree.put(pair[1], indegree.get(pair[1]) + 1);
+        }
+        List<String> path = new ArrayList<>();
+        Queue<String> queue = new LinkedList<>();
+        for (String key : indegree.keySet()) {
+            if (indegree.get(key) == 0) {
+                queue.offer(key);
+            }
+        }
+        while (!queue.isEmpty()) {
+            String cur = queue.remove();
+            path.add(cur);
+            if (!graph.containsKey(cur)) {
+                continue;
+            }
+            for (String neighbor : graph.get(cur)) {
+               queue.offer(neighbor);
+            }
+        }
+        return path.get((path.size() - 1) / 2);
+    }
 }
